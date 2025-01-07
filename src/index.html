@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Тренажёр слепой печати</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+<div class="container" id="app">
+    <!-- Начальный экран -->
+    <div id="startScreen">
+        <h1>Тренажёр слепой печати</h1>
+        <label>Выберите тип текста:</label>
+        <select id="textTypeSelect">
+            <option value="all">Все тексты</option>
+            <option value="custom">Мои тексты</option>
+            <option value="preset">Существующие тексты</option>
+        </select><br>
+        <div class="hidden" id="levelContainer">
+            <br>
+            <label>Выберите уровень:</label>
+            <select id="textLevelSelect">
+                <option value="easy">Легкий</option>
+                <option value="medium">Средний</option>
+                <option value="hard">Сложный</option>
+            </select><br>
+        </div>
+        <div class="hidden" id="selectedTextToViewContainer">
+            <p>Выбранный текст:</p>
+            <div class="textToType" id="selectedTextToView"></div>
+        </div>
+        <button id="showTextListButton" class="hidden">Показать список текстов</button>
+        <button id="addTextButton" class="hidden">Добавить текст</button>
+        <br>
+        <div id="ownTextInputContainer" class="hidden">
+            <input type="text" id="ownTextInput">
+            <button id="ownTextInputBtn">Добавить</button>
+        </div>
+
+        <div id="textListContainer" class="hidden">
+            <div id="textList"></div>
+        </div>
+        <button id="startButton">Начать</button>
+    </div>
+
+    <!-- Экран тренировки -->
+    <div id="trainingScreen" class="hidden">
+        <h1>Тренажёр слепой печати</h1>
+        <p id="textToType" class="textToType"></p>
+        <input type="text" id="inputField" autofocus/>
+        <p id="result"></p>
+        <button id="restartButton">Начать заново</button>
+        <button id="backToStartButton">В начало</button>
+    </div>
+</div>
+<script type="module" src="scripts/controller/index.js"></script>
+<script type="module" src="scripts/controller/loadPage.js"></script>
+</body>
+</html>
