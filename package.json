@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "gh-pages": "^6.3.0",
-    "homepage": "https://robzarel.github.io/gh-pages-demo"
+    "homepage": "https://github.com/Adelina980.github.io/touchTypingSimulator"
   },
   "scripts": {
     "predeploy": "rm -rf build && npm run build",
