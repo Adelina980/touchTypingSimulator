@@ -105,8 +105,11 @@ window.addEventListener('load', async () => {
         ownTextInput.value = '';
         ownTextInputContainer.classList.add('hidden');
     }
-    if (savedCustomTexts) {
+    if (savedCustomTexts && savedCustomTexts !=='null') {
         setCustomTexts(JSON.parse(savedCustomTexts));
+    }
+    else{
+        setCustomTexts([]);
     }
     if (selectedType === 'custom' && customTexts && customTexts.length > 0) {
         populateTextList(customTexts, selectedText);
