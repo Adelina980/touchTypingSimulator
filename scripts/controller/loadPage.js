@@ -53,7 +53,7 @@ window.addEventListener('load', async () => {
     const savedLevel = localStorage.getItem('selectedLevel');
     const isSelectedLevelContainerVisible = localStorage.getItem('isSelectedLevelContainerVisible') === 'true';
     const savedTextInput = localStorage.getItem('ownTextInput');
-    const savedCustomTexts = localStorage.getItem('customTexts');
+    const savedCustomTexts = localStorage.getItem('customTexts') || [];
 
     if (savedType) {
         setSelectedType(savedType);
