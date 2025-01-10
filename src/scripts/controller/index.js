@@ -40,7 +40,10 @@ import {
 
 
 async function startTraining() {
-    if (customTexts !== [] && customTexts.length !== 0) {
+    if (selectedType === 'custom' && (customTexts === [] || customTexts.length === 0)) {
+        alert("Вы ещё не добавили ни одного текста!");
+
+    } else {
         if (isAddingText) {
             const confirmExit = confirm("Вы уверены, что хотите начать тренировку? Незавершенный текст будет утерян.");
             if (!confirmExit) {
@@ -72,8 +75,6 @@ async function startTraining() {
         } else {
             setIsTextLoaded(true);
         }
-    } else {
-        alert("Вы ещё не добавили ни одного текста!");
     }
 }
 
