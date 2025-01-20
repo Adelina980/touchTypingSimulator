@@ -11,67 +11,49 @@ let presetTexts = []; // Пресетные тексты
 let currentText = "";
 let startTime;
 
-const fetchPresetTexts = async (level) => {
-    try {
-        const sentences = level === 'easy' ? 1 : level === 'medium' ? 3 : 6;
-        const response = await fetch(`https://fish-text.ru/get?type=sentence&number=${sentences}&format=json`);
-        const data = await response.json();
-        if (data.status === 'success') {
-            return data.text;
-        } else {
-            throw new Error(data.text);
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки данных:', error);
-        return "Ошибка загрузки текста";
-    }
-};
-
-async function updatePresetTexts(level) {
-    isTextLoaded = false; // Перед загрузкой сбрасываем флаг
-
-    if (level) {
-        presetTexts = [await fetchPresetTexts(level)];
-    } else {
-        presetTexts = [await fetchPresetTexts('easy'), await fetchPresetTexts('medium'), await fetchPresetTexts('hard')];
-    }
-    allTexts = [...customTexts, ...presetTexts];
-    console.log(allTexts);
-    isTextLoaded = true;
-}
 
 function getRandomText(texts) {
     return texts[Math.floor(Math.random() * texts.length)];
 }
 
-function loadCurrentText(textToType) {
-    if (selectedType === 'custom') {
-        currentText = selectedText || getRandomText(customTexts);
-    } else if (selectedType === 'preset') {
-        currentText = getRandomText(presetTexts);
-    } else {
-        currentText = getRandomText(allTexts);
-    }
-    textToType.textContent = currentText;
-
+function getSelectedType() {
+    return selectedType;
 }
 
-function checkInput(inputField, result) {
-    const typedText = inputField.value;
-    const correctText = currentText.slice(0, typedText.length);
+function getSelectedLevel() {
+    return selectedLevel;
+}
 
-    if (typedText !== correctText) {
-        inputField.classList.add('error');
-    } else {
-        inputField.classList.remove('error');
-    }
+function getSelectedText() {
+    return selectedText;
+}
 
-    if (typedText === currentText) {
-        const timeTaken = (Date.now() - startTime) / 1000;
-        const wordsPerMinute = (currentText.length / 5) / (timeTaken / 60);
-        result.textContent = `Готово! Время: ${timeTaken.toFixed(2)} сек. Скорость: ${Math.round(wordsPerMinute)} слов/мин.`;
-        inputField.disabled = true;
-    }
+function getIsTextLoaded() {
+    return isTextLoaded;
+}
+
+function getIsAddingText() {
+    return isAddingText;
+}
+
+function getCustomTexts() {
+    return customTexts;
+}
+
+function getStartTime() {
+    return startTime;
+}
+
+function getCurrentText() {
+    return currentText;
+}
+
+function getPresetTexts() {
+    return presetTexts;
+}
+
+function getAllTexts() {
+    return allTexts;
 }
 
 function setSelectedType(newType) {
@@ -90,8 +72,8 @@ function setIsTextLoaded(newTextLoaded) {
     isTextLoaded = newTextLoaded;
 }
 
-function setIsAddingText(newAddingText) {
-    isAddingText = newAddingText;
+function setIsAddingText(newIsAddingText) {
+    isAddingText = newIsAddingText;
 }
 
 function setCustomTexts(newCustomTexts) {
@@ -101,6 +83,23 @@ function setCustomTexts(newCustomTexts) {
 function setStartTime(newStartTime) {
     startTime = newStartTime;
 }
+
+function setCurrentText(newCurrentText) {
+    currentText = newCurrentText;
+}
+
+function setPresetTexts(newPresetTexts) {
+    presetTexts = newPresetTexts;
+}
+
+function setAllTexts(newAllTexts) {
+    allTexts = newAllTexts;
+}
+
+function addCustomText(text) {
+    customTexts.push(text);
+}
+
 
 export {
     selectedType,
@@ -113,16 +112,26 @@ export {
     presetTexts,
     currentText,
     startTime,
-    fetchPresetTexts,
-    updatePresetTexts,
     getRandomText,
-    loadCurrentText,
-    checkInput,
     setSelectedType,
     setSelectedLevel,
     setSelectedText,
     setIsTextLoaded,
     setIsAddingText,
     setCustomTexts,
-    setStartTime
+    setStartTime,
+    setCurrentText,
+    setPresetTexts,
+    setAllTexts,
+    addCustomText,
+    getSelectedType,
+    getSelectedLevel,
+    getSelectedText,
+    getIsTextLoaded,
+    getIsAddingText,
+    getCustomTexts,
+    getStartTime,
+    getCurrentText,
+    getPresetTexts,
+    getAllTexts,
 };
