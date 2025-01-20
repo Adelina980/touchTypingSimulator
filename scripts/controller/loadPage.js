@@ -1,19 +1,12 @@
 import {
-    customTexts,
-    isAddingText,
-    selectedLevel,
-    selectedText,
-    selectedType,
-    setCustomTexts,
-    setIsAddingText,
-    setIsTextLoaded,
-    setSelectedLevel,
-    setSelectedText,
-    setSelectedType,
-    updatePresetTexts
+    getCustomTexts, getIsAddingText, getSelectedLevel, getSelectedText, getSelectedType,
+    setCustomTexts, setIsAddingText, setIsTextLoaded, setSelectedLevel, setSelectedText, setSelectedType,
 } from "../model.js";
 import {
     populateTextList,
+    updateElementValue,
+    showElement,
+    updateTextContent,
     textTypeSelect,
     showTextListButton,
     textListContainer,
@@ -24,23 +17,26 @@ import {
     addTextButton,
     ownTextInputContainer,
     ownTextInput,
+    hideElement
 } from '../view.js';
+import {updatePresetTexts} from "./index.js";
+
 
 window.addEventListener('beforeunload', () => {
-    localStorage.setItem('selectedType', selectedType);
-    localStorage.setItem('selectedText', selectedText);
+    localStorage.setItem('selectedType', getSelectedType());
+    localStorage.setItem('selectedText', getSelectedText());
     localStorage.setItem('isShowTextListButtonVisible', !showTextListButton.classList.contains('hidden')); // Сохраняем видимость кнопки
     localStorage.setItem('isAddTextButtonVisible', !addTextButton.classList.contains('hidden')); // Сохраняем видимость кнопки
     localStorage.setItem('isSelectedTextToViewContainerVisible', !selectedTextToViewContainer.classList.contains('hidden'));
     localStorage.setItem('textSelected', localStorage.getItem('textSelected'));
-    localStorage.setItem('selectedLevel', selectedLevel);
-    localStorage.setItem('isSelectedLevelContainerVisible', selectedType === 'preset');
-    if (isAddingText) {
+    localStorage.setItem('selectedLevel', getSelectedLevel());
+    localStorage.setItem('isSelectedLevelContainerVisible', getSelectedType() === 'preset');
+    if (getIsAddingText()) {
         localStorage.setItem('ownTextInput', ownTextInput.value);
     } else {
         localStorage.setItem('ownTextInput', "");
     }
-    localStorage.setItem('customTexts', JSON.stringify(customTexts || []));
+    localStorage.setItem('customTexts', JSON.stringify(getCustomTexts() || []));
 });
 
 window.addEventListener('load', async () => {
@@ -57,61 +53,60 @@ window.addEventListener('load', async () => {
 
     if (savedType) {
         setSelectedType(savedType);
-        textTypeSelect.value = savedType;
+        updateElementValue(textTypeSelect, savedType);
     }
     if (savedLevel) {
         setSelectedLevel(savedLevel);
-        textLevelSelect.value = savedLevel;
+        updateElementValue(textLevelSelect, savedLevel);
     }
     if (savedText === textSelected) {
         setSelectedText(savedText);
-        selectedTextToViewContainer.classList.remove('hidden');
-        selectedTextToView.textContent = savedText;
+        showElement(selectedTextToViewContainer);
+        updateTextContent(selectedTextToView, savedText);
     }
     if (isShowTextListButtonVisible) {
-        showTextListButton.classList.remove('hidden');
+        showElement(showTextListButton);
     } else {
-        showTextListButton.classList.add('hidden');
+        hideElement(showTextListButton);
     }
     if (isAddTextButtonVisible) {
-        addTextButton.classList.remove('hidden');
+        showElement(addTextButton);
     } else {
-        addTextButton.classList.add('hidden');
+        hideElement(addTextButton);
     }
     if (isSelectedTextToViewContainerVisible) {
-        selectedTextToViewContainer.classList.remove('hidden');
+        showElement(selectedTextToViewContainer);
     } else {
-        selectedTextToViewContainer.classList.add('hidden');
+        hideElement(selectedTextToViewContainer);
     }
     if (isSelectedLevelContainerVisible) {
-        levelContainer.classList.remove('hidden');
+        showElement(levelContainer);
     } else {
-        levelContainer.classList.add('hidden');
+        hideElement(levelContainer);
     }
-    if (selectedType === 'all') {
-        textListContainer.classList.add('hidden');
+    if (getSelectedType() === 'all') {
+        hideElement(textListContainer);
         await updatePresetTexts(); // Загружаем пресеты
-    } else if (selectedType === 'preset') {
-        textListContainer.classList.add('hidden');
-        await updatePresetTexts(selectedLevel); // Загружаем пресеты
+    } else if (getSelectedType() === 'preset') {
+        hideElement(textListContainer);
+        await updatePresetTexts(getSelectedLevel()); // Загружаем пресеты
     } else {
         setIsTextLoaded(true);
     }
     if (savedTextInput && savedTextInput.trim() !== "") {
-        ownTextInput.value = savedTextInput;
-        ownTextInputContainer.classList.remove('hidden');
+        updateElementValue(ownTextInput, savedTextInput);
+        showElement(ownTextInputContainer);
         setIsAddingText(true);
     } else {
-        ownTextInput.value = '';
-        ownTextInputContainer.classList.add('hidden');
+        updateElementValue(ownTextInput, "");
+        hideElement(ownTextInputContainer);
     }
-    if (savedCustomTexts && savedCustomTexts !=='null') {
+    if (savedCustomTexts && savedCustomTexts !== 'null') {
         setCustomTexts(JSON.parse(savedCustomTexts));
-    }
-    else{
+    } else {
         setCustomTexts([]);
     }
-    if (selectedType === 'custom' && customTexts && customTexts.length > 0) {
-        populateTextList(customTexts, selectedText);
+    if (getSelectedType() === 'custom' && getCustomTexts() && getCustomTexts().length > 0) {
+        populateTextList(getCustomTexts(), getSelectedText());
     }
 });

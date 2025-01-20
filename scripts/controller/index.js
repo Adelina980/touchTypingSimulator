@@ -1,6 +1,11 @@
 import {
     populateTextList,
     showTextList,
+    showErrorOnInput,
+    hideErrorOnInput,
+    updateResult,
+    updateElementValue,
+    updateElementDisabled,
     textTypeSelect,
     showTextListButton,
     textListContainer,
@@ -19,59 +24,125 @@ import {
     ownTextInputContainer,
     ownTextInput,
     ownTextInputBtn,
+    hideElement,
+    showElement,
+    updateTextContent,
 } from '../view.js';
 import {
-    updatePresetTexts,
-    loadCurrentText,
-    checkInput,
     setSelectedType,
     setSelectedLevel,
     setSelectedText,
     setIsTextLoaded,
     setIsAddingText,
     setStartTime,
-    selectedType,
-    selectedText,
-    selectedLevel,
-    isTextLoaded,
-    isAddingText,
-    customTexts,
+    getRandomText,
+    setCurrentText,
+    setPresetTexts,
+    setAllTexts,
+    addCustomText,
+    getSelectedType,
+    getSelectedText,
+    getSelectedLevel,
+    getIsTextLoaded,
+    getIsAddingText,
+    getCustomTexts,
+    getStartTime,
+    getPresetTexts,
+    getAllTexts,
+    getCurrentText,
 } from '../model.js';
 
 
+const fetchPresetTexts = async (level) => {
+    try {
+        const sentences = level === 'easy' ? 1 : level === 'medium' ? 3 : 6;
+        const response = await fetch(`https://fish-text.ru/get?type=sentence&number=${sentences}&format=json`);
+        const data = await response.json();
+        if (data.status === 'success') {
+            return data.text;
+        } else {
+            throw new Error(data.text);
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+        return "Ошибка загрузки текста";
+    }
+};
+
+async function updatePresetTexts(level) {
+    setIsTextLoaded(false);
+    if (level) {
+        setPresetTexts([await fetchPresetTexts(level)]);
+    } else {
+        setPresetTexts([await fetchPresetTexts('easy'), await fetchPresetTexts('medium'), await fetchPresetTexts('hard')]);
+    }
+    setAllTexts([...getCustomTexts(), ...getPresetTexts()]);
+    setIsTextLoaded(true);
+}
+
+function loadCurrentText(textToType) {
+    if (getSelectedType() === 'custom') {
+        setCurrentText(getSelectedText() || getRandomText(getCustomTexts()));
+    } else if (getSelectedType() === 'preset') {
+        setCurrentText(getRandomText(getPresetTexts()));
+    } else {
+        setCurrentText(getRandomText(getAllTexts()));
+    }
+    updateTextContent(textToType, getCurrentText());
+
+}
+
+function checkInput(inputField, result) {
+    const typedText = inputField.value;
+    const correctText = getCurrentText().slice(0, typedText.length);
+
+    if (typedText !== correctText) {
+        showErrorOnInput(inputField);
+    } else {
+        hideErrorOnInput(inputField);
+    }
+
+    if (typedText === getCurrentText()) {
+        const timeTaken = (Date.now() - getStartTime()) / 1000;
+        const wordsPerMinute = (getCurrentText().length / 5) / (timeTaken / 60);
+        updateResult(result, timeTaken, wordsPerMinute);
+        updateElementDisabled(inputField, true)
+    }
+}
+
 async function startTraining() {
-    if (selectedType === 'custom' && (customTexts === [] || customTexts.length === 0)) {
+    if (getSelectedType() === 'custom' && getCustomTexts().length === 0) {
         alert("Вы ещё не добавили ни одного текста!");
 
     } else {
-        if (isAddingText) {
+        if (getIsAddingText()) {
             const confirmExit = confirm("Вы уверены, что хотите начать тренировку? Незавершенный текст будет утерян.");
             if (!confirmExit) {
                 return;
             }
-            ownTextInput.value = "";
-            ownTextInputContainer.classList.add('hidden');
+            updateElementValue(ownTextInput, "");
+            hideElement(ownTextInputContainer);
             setIsAddingText(false);
         }
-        if (!isTextLoaded) {
+        if (!getIsTextLoaded()) {
             alert("Тексты еще загружаются. Пожалуйста, подождите.");
             return; // Прерываем запуск тренировки
         }
         if (inputField.classList.contains('error')) {
-            inputField.classList.remove('error');
+            hideErrorOnInput(inputField);
         }
-        startScreen.classList.add('hidden');
-        trainingScreen.classList.remove('hidden');
-        inputField.disabled = false;
-        inputField.value = '';
-        result.textContent = '';
+        hideElement(startScreen);
+        showElement(trainingScreen);
+        updateElementDisabled(inputField, false);
+        updateElementValue(inputField, "");
+        updateTextContent(result, "");
         setStartTime(Date.now());
 
         loadCurrentText(textToType);
-        if (selectedType === 'all') {
+        if (getSelectedType() === 'all') {
             await updatePresetTexts();
-        } else if (selectedType === 'preset') {
-            await updatePresetTexts(selectedLevel);
+        } else if (getSelectedType() === 'preset') {
+            await updatePresetTexts(getSelectedLevel());
         } else {
             setIsTextLoaded(true);
         }
@@ -79,42 +150,42 @@ async function startTraining() {
 }
 
 async function handleTextTypeChange() {
-    if (isAddingText) {
+    if (getIsAddingText()) {
         const confirmExit = confirm("Вы уверены, что хотите начать тренировку? Незавершенный текст будет утерян.");
         if (!confirmExit) {
-            textTypeSelect.value = 'custom';
+            updateElementValue(textTypeSelect, "custom");
             return;
         }
-        ownTextInput.value = "";
-        ownTextInputContainer.classList.add('hidden');
-        isAddingText = false;
+        updateElementValue(ownTextInput, "");
+        hideElement(ownTextInputContainer);
+        setIsAddingText(false);
     }
     if (!ownTextInputContainer.classList.contains("hidden")) {
-        ownTextInputContainer.classList.add("hidden");
+        hideElement(ownTextInputContainer);
     }
-    textListContainer.classList.add('hidden');
+    hideElement(textListContainer);
     setSelectedType(textTypeSelect.value);
     localStorage.removeItem('selectedText');
-    selectedTextToViewContainer.classList.add('hidden');
+    hideElement(selectedTextToViewContainer);
 
     setSelectedType(textTypeSelect.value);
-    if (selectedType === 'custom') {
-        if (customTexts !== [] && customTexts.length !== 0) {
-            showTextListButton.textContent = "Показать список текстов";
-            showTextListButton.classList.remove('hidden');
+    if (getSelectedType() === 'custom') {
+        if (getCustomTexts().length !== 0) {
+            updateTextContent(showTextListButton, "Показать список текстов");
+            showElement(showTextListButton);
         }
-        addTextButton.classList.remove('hidden');
-        levelContainer.classList.add('hidden');
-    } else if (selectedType === 'preset') {
-        levelContainer.classList.remove('hidden');
-        showTextListButton.classList.add('hidden');
-        addTextButton.classList.add('hidden');
+        showElement(addTextButton);
+        hideElement(levelContainer);
+    } else if (getSelectedType() === 'preset') {
+        showElement(levelContainer);
+        hideElement(showTextListButton);
+        hideElement(addTextButton);
         setIsTextLoaded(false);
-        await updatePresetTexts(selectedLevel);
+        await updatePresetTexts(getSelectedLevel());
     } else {
-        levelContainer.classList.add('hidden');
-        showTextListButton.classList.add('hidden');
-        addTextButton.classList.add('hidden');
+        hideElement(levelContainer);
+        hideElement(showTextListButton);
+        hideElement(addTextButton);
         setIsTextLoaded(false);
         await updatePresetTexts();
     }
@@ -123,31 +194,31 @@ async function handleTextTypeChange() {
 function handleLevelChange() {
     setSelectedLevel(textLevelSelect.value);
     updatePresetTexts(textLevelSelect.value);
-    localStorage.setItem('selectedLevel', selectedLevel);
+    localStorage.setItem('selectedLevel', getSelectedLevel());
 }
 
 function handleAddText() {
     if (ownTextInputContainer.classList.contains('hidden')) {
-        ownTextInputContainer.classList.remove('hidden');
+        showElement(ownTextInputContainer);
     } else {
-        ownTextInputContainer.classList.add('hidden');
+        hideElement(ownTextInputContainer);
     }
 }
 
 function handleBackToStart() {
-    trainingScreen.classList.add('hidden');
-    startScreen.classList.remove('hidden');
+    hideElement(trainingScreen);
+    showElement(startScreen);
     setSelectedText(null);
     localStorage.removeItem('selectedText');
-    selectedTextToViewContainer.classList.add('hidden');
-    ownTextInputContainer.classList.add('hidden');
-    textListContainer.classList.add('hidden');
+    hideElement(selectedTextToViewContainer);
+    hideElement(ownTextInputContainer);
+    hideElement(textListContainer);
 }
 
 // События
 startButton.addEventListener('click', startTraining);
 restartButton.addEventListener('click', startTraining);
-showTextListButton.addEventListener('click', () => showTextList(customTexts, selectedText));
+showTextListButton.addEventListener('click', () => showTextList(getCustomTexts(), getSelectedText()));
 inputField.addEventListener('input', () => checkInput(inputField, result));
 ownTextInputContainer.addEventListener('input', () => {
     setIsAddingText(true);
@@ -158,25 +229,25 @@ ownTextInputContainer.addEventListener('input', () => {
 ownTextInputBtn.addEventListener('click', () => {
     let isInList = false;
     if (ownTextInput.value !== "" || ownTextInput.value.length !== 0) {
-        for (let customText of customTexts) {
+        for (let customText of getCustomTexts()) {
             if (customText === ownTextInput.value) {
                 isInList = true;
             }
         }
         if (!isInList) {
-            customTexts.push(ownTextInput.value);
+            addCustomText(ownTextInput.value)
         }
         if (!textListContainer.classList.contains("hidden")) {
-            populateTextList(customTexts, selectedText);
+            populateTextList(getCustomTexts(), getSelectedText());
 
-            textListContainer.classList.remove('hidden');
-            showTextListButton.textContent = "Скрыть список текстов";
+            showElement(textListContainer);
+            updateTextContent(showTextListButton, "Скрыть список текстов");
         }
         if (showTextListButton.classList.contains('hidden')) {
-            showTextListButton.textContent = "Показать список текстов";
-            showTextListButton.classList.remove('hidden');
+            updateTextContent(showTextListButton, "Показать список текстов");
+            showElement(showTextListButton);
         }
-        ownTextInput.value = "";
+        updateElementValue(ownTextInput, "");
         setIsAddingText(false);
     }
 });
@@ -184,5 +255,8 @@ textTypeSelect.addEventListener('change', handleTextTypeChange);
 textLevelSelect.addEventListener('change', handleLevelChange);
 addTextButton.addEventListener('click', handleAddText);
 backToStartButton.addEventListener('click', handleBackToStart);
+
+
+export {updatePresetTexts}
 
 
