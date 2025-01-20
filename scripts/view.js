@@ -74,6 +74,45 @@ function showTextList(customTexts, selectedText) {
     }
 }
 
+// Показываем ошибку на поле ввода
+function showErrorOnInput(inputField) {
+    inputField.classList.add('error');
+}
+
+// Скрываем ошибку на поле ввода
+function hideErrorOnInput(inputField) {
+    inputField.classList.remove('error');
+}
+
+// Обновляем текст результата
+function updateResult(result, timeTaken, wordsPerMinute) {
+    result.textContent = `Готово! Время: ${timeTaken.toFixed(2)} сек. Скорость: ${Math.round(wordsPerMinute)} слов/мин.`;
+}
+
+// Скрываем элемент
+function hideElement(element) {
+    element.classList.add('hidden');
+}
+
+// Показываем элемент
+function showElement(element) {
+    element.classList.remove('hidden');
+}
+
+// Обновляем текст в элементе
+function updateTextContent(element, text) {
+    element.textContent = text;
+}
+
+function updateElementValue(inputElement, value) {
+    inputElement.value = value;
+}
+
+function updateElementDisabled(element, isDisabled) {
+    element.disabled = isDisabled;
+}
+
+
 export {
     textTypeSelect,
     showTextListButton,
@@ -97,4 +136,12 @@ export {
     ownTextInputBtn,
     populateTextList,
     showTextList,
+    showErrorOnInput,
+    hideErrorOnInput,
+    updateResult,
+    hideElement,
+    showElement,
+    updateTextContent,
+    updateElementValue,
+    updateElementDisabled
 };
